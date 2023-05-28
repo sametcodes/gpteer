@@ -1,0 +1,18 @@
+{
+    "schema_version": "v1",
+    "name_for_human": "Do things on the web.",
+    "name_for_model": "web_browser_automation",
+    "description_for_human": "Drive your browser and do things on the web with ChatGPT",
+    "description_for_model": "Plugin for driving pupppeter script, you can click, scroll and visit web pages.",
+    "auth": {
+      "type": "none"
+    },
+    "api": {
+      "type": "openapi",
+      "url": "http://localhost:8008/openapi.yaml"
+    },
+    "logo_url": "http://localhost:8008/logo.png",
+    "contact_email": "legal@example.com",
+    "legal_info_url": "http://example.com/legal"
+  }
+  

@@ -1,0 +1,40 @@
+openapi: 3.0.1
+info:
+  title: PuppeteerGPT
+  description: A plugin to drive headless browser. You can use it to search, click, scroll or scrape on the web. You can automate any action just by chatting.
+  version: "v1"
+servers:
+  - url: http://localhost:8008
+paths:
+  /visit:
+    get:
+      operationId: visit
+      summary: Visit a website
+      parameters:
+        - in: query
+          name: url
+          schema:
+            type: string
+          required: true
+          description: The url of the website to visit.
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+  /click:
+    get:
+      operationId: click
+      summary: Click on a selector
+      parameters:
+        - in: query
+          name: selector
+          schema:
+            type: string
+          required: true
+          description: The selector to click on. It can be a CSS selector.
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
