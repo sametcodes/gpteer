@@ -5,6 +5,10 @@ A ChatGPT plugin to drive Puppeteer browser. The aim of the project to provide a
 
 > It's a work in progress, and experimental. Follow me on [Twitter](https://twitter.com/sametcodes) to get updates.
 
+<a href="https://www.loom.com/share/4eea6da77830460797d9ac3661ba2897">
+  <img width="400" src="https://cdn.loom.com/sessions/thumbnails/4eea6da77830460797d9ac3661ba2897-1685397857570-with-play.gif" />
+</a>
+
 ### How it works?
 
 It takes the actions step by step, and each step returns a map object of elements like input and buttons from document. The idea here is helping ChatGPT to read the document without exceeding the limit of the input size, and we don't have to struggle with parsing documents. And it helps to keep the context of the document and it will be aware which button to click on or which input to type on.
