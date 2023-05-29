@@ -39,7 +39,7 @@ paths:
         "404":
           description: Not found
   /type:
-    get: 
+    get:
       operationId: typeText
       summary: Type texts on a input field
       parameters:
@@ -55,6 +55,13 @@ paths:
             type: string
           required: true
           description: The text to type
+        - in: query
+          name: pressEnter
+          schema:
+            type: boolean
+          required: false
+          default: true
+          description: Whether to press enter after typing
       responses:
         "200":
           description: OK

@@ -11,33 +11,25 @@ function parseDocument(document, lookingFor = ["button", "input"]) {
         }
 
         if (element.id) {
-            addToResult(result, element.tagName.toLowerCase(), `#${element.id}`, element);
-        }
-        else if (element.className && typeof element.className === 'string') {
-            let classes = element.className.split(' ').join('.');
-            addToResult(result, element.tagName.toLowerCase(), `.${classes}`, element);
-        }
-        else {
-            let path = getPathTo(element);
-            addToResult(result, element.tagName.toLowerCase(), path, element);
+            addToResult(result, element.tagName.toLowerCase(), `${element.tagName.toLowerCase()}#${element.id}`);
+        } else if (element.className && typeof element.className === 'string') {
+            const classes = element.className.split(' ').join('.');
+            addToResult(result, element.tagName.toLowerCase(), `${element.tagName.toLowerCase()}.${classes}`);
+        } else {
+            const path = getPathTo(element);
+            addToResult(result, element.tagName.toLowerCase(), path);
         }
     }
 
     return result;
 }
 
-function addToResult(result, tagName, key, element) {
+function addToResult(result, tagName, selector) {
     if (!result[tagName]) {
-        result[tagName] = {};
+        result[tagName] = [];
     }
 
-    result[tagName][key] = {
-        id: element.id,
-        className: element.className,
-        value: element.value,
-        data: element.dataset,
-        type: element.type
-    };
+    result[tagName].push(selector)
 }
 
 function getPathTo(element) {

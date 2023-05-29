@@ -1,45 +1,26 @@
 import { Request, Response } from 'express';
-import puppeteer, { Browser, Page } from 'puppeteer';
+import { closePage, getPage } from '../model/browser';
 
-import fs from 'fs';
-
-var browser: Browser;
-var page: Page;
-
+type VisitRequestQuery = { url: string, }
 export const visit = async (req: Request, res: Response) => {
-    const url = req.query.url as string;
+    const page = await getPage();
+    const { url } = req.query as VisitRequestQuery;
 
-    if (!url) {
-        res.status(400).send('Missing site parameter');
-        return;
-    }
-
-    if (!page) {
-        browser = await puppeteer.launch({
-            headless: false,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage'
-            ]
-        });
-        page = await browser.newPage();
-    }
-
-    const preloadFile = fs.readFileSync('./scripts/index.js', 'utf8');
-    await page.evaluateOnNewDocument(preloadFile);
+    if (!url) return res.status(400).send('Missing site parameter');
 
     await page.goto(url, { waitUntil: 'networkidle2' });
 
     const mapObject = await page.evaluate(() => {
         // @ts-ignore
-        return JSON.stringify(parseDocument(document));
+        return parseDocument(document)
     });
     return res.status(200).json(mapObject);
 }
 
+type ClickRequestQuery = { selector: string, }
 export const click = async (req: Request, res: Response) => {
-    const selector = req.query.selector as string;
+    const page = await getPage();
+    const { selector } = req.query as ClickRequestQuery;
 
     if (!selector) {
         res.status(400).send('Missing selector parameter');
@@ -48,12 +29,20 @@ export const click = async (req: Request, res: Response) => {
 
     await page.waitForSelector(selector);
     await page.click(selector);
-    return res.status(200).send('OK');
+    await page.waitForNavigation({ waitUntil: 'networkidle2' });
+
+    const mapObject = await page.evaluate(() => {
+        // @ts-ignore
+        return parseDocument(document)
+    });
+
+    return res.status(200).json(mapObject);
 }
 
+type TypeRequestQuery = { selector: string, text: string, pressEnter?: string }
 export const type = async (req: Request, res: Response) => {
-    const selector = req.query.selector as string;
-    const text = req.query.text as string;
+    const page = await getPage();
+    const { selector, text, pressEnter = "true" } = req.query as TypeRequestQuery;
 
     if (!selector) {
         res.status(400).send('Missing selector parameter');
@@ -65,14 +54,20 @@ export const type = async (req: Request, res: Response) => {
         return;
     }
 
-    console.log("Type: ", { selector, text });
     await page.waitForSelector(selector);
     await page.type(selector, text, { delay: 100 });
-    return res.status(200).send('OK');
+
+    if (pressEnter === "true") await page.keyboard.press('Enter');
+    await page.waitForNavigation({ waitUntil: 'networkidle2' });
+
+    const mapObject = await page.evaluate(() => {
+        // @ts-ignore
+        return parseDocument(document)
+    });
+    return res.status(200).json(mapObject);
 }
 
 export const exit = async (req: Request, res: Response) => {
-    await page.close();
-    await browser.close();
+    await closePage();
     return res.status(200).send('OK');
 }
