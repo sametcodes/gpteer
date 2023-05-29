@@ -32,7 +32,38 @@ paths:
           schema:
             type: string
           required: true
-          description: The selector to click on. It can be a CSS selector.
+          description: The selector to click on
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+  /type:
+    get: 
+      operationId: typeText
+      summary: Type texts on a input field
+      parameters:
+        - in: query
+          name: selector
+          schema:
+            type: string
+          required: true
+          description: The selector of the input field
+        - in: query
+          name: text
+          schema:
+            type: string
+          required: true
+          description: The text to type
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+  /exit:
+    get:
+      operationId: exit
+      summary: Exit the browser
       responses:
         "200":
           description: OK

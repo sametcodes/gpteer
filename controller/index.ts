@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-
 import puppeteer, { Browser, Page } from 'puppeteer';
 
+import fs from 'fs';
+
 var browser: Browser;
-let page: Page;
+var page: Page;
 
 export const visit = async (req: Request, res: Response) => {
-    console.log(req.query)
     const url = req.query.url as string;
 
     if (!url) {
@@ -26,9 +26,16 @@ export const visit = async (req: Request, res: Response) => {
         page = await browser.newPage();
     }
 
+    const preloadFile = fs.readFileSync('./scripts/index.js', 'utf8');
+    await page.evaluateOnNewDocument(preloadFile);
+
     await page.goto(url, { waitUntil: 'networkidle2' });
-    const source = await page.content();
-    res.status(200).send(source);
+
+    const mapObject = await page.evaluate(() => {
+        // @ts-ignore
+        return JSON.stringify(parseDocument(document));
+    });
+    return res.status(200).json(mapObject);
 }
 
 export const click = async (req: Request, res: Response) => {
@@ -41,5 +48,31 @@ export const click = async (req: Request, res: Response) => {
 
     await page.waitForSelector(selector);
     await page.click(selector);
-    res.status(200).send('OK');
+    return res.status(200).send('OK');
+}
+
+export const type = async (req: Request, res: Response) => {
+    const selector = req.query.selector as string;
+    const text = req.query.text as string;
+
+    if (!selector) {
+        res.status(400).send('Missing selector parameter');
+        return;
+    }
+
+    if (!text) {
+        res.status(400).send('Missing text parameter');
+        return;
+    }
+
+    console.log("Type: ", { selector, text });
+    await page.waitForSelector(selector);
+    await page.type(selector, text, { delay: 100 });
+    return res.status(200).send('OK');
+}
+
+export const exit = async (req: Request, res: Response) => {
+    await page.close();
+    await browser.close();
+    return res.status(200).send('OK');
 }
