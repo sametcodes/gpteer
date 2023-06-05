@@ -18,6 +18,7 @@ app.use((req, res, next) => {
 app.get("/visit", controller.visit);
 app.get("/click", controller.click);
 app.get("/type", controller.type);
+app.get("/wait", controller.wait);
 app.get("/exit", controller.exit);
 
 app.use(express.static('static'));

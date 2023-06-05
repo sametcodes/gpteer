@@ -67,6 +67,22 @@ paths:
           description: OK
         "404":
           description: Not found
+  /wait:
+    get:
+      operationId: wait
+      summary: Wait for N seconds
+      parameters:
+        - in: query
+          name: time
+          schema:
+            type: integer
+          required: true
+          description: Time to wait in seconds
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
   /exit:
     get:
       operationId: exit

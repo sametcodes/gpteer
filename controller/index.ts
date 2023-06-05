@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { closePage, getPage } from '../model/browser';
+import { waitForTimeout } from '../utils';
 
 type VisitRequestQuery = { url: string, }
 export const visit = async (req: Request, res: Response) => {
@@ -29,7 +30,7 @@ export const click = async (req: Request, res: Response) => {
 
     await page.waitForSelector(selector);
     await page.click(selector);
-    await page.waitForNavigation({ waitUntil: 'networkidle2' });
+    await waitForTimeout(2000);
 
     const mapObject = await page.evaluate(() => {
         // @ts-ignore
@@ -58,13 +59,27 @@ export const type = async (req: Request, res: Response) => {
     await page.type(selector, text, { delay: 100 });
 
     if (pressEnter === "true") await page.keyboard.press('Enter');
-    await page.waitForNavigation({ waitUntil: 'networkidle2' });
+    await waitForTimeout(2000);
 
     const mapObject = await page.evaluate(() => {
         // @ts-ignore
         return parseDocument(document)
     });
     return res.status(200).json(mapObject);
+}
+
+export const wait = async (req: Request, res: Response) => {
+    const page = await getPage();
+    const { time } = req.query;
+
+    if (!time) {
+        res.status(400).send('Missing time parameter');
+        return;
+    }
+
+    await waitForTimeout(2000);
+
+    return res.status(200).send('OK');
 }
 
 export const exit = async (req: Request, res: Response) => {

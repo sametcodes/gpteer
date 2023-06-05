@@ -11,25 +11,28 @@ function parseDocument(document, lookingFor = ["button", "input"]) {
         }
 
         if (element.id) {
-            addToResult(result, element.tagName.toLowerCase(), `${element.tagName.toLowerCase()}#${element.id}`);
+            addToResult(result, element.tagName.toLowerCase(), `${element.tagName.toLowerCase()}#${element.id}`, element);
         } else if (element.className && typeof element.className === 'string') {
-            const classes = element.className.split(' ').join('.');
-            addToResult(result, element.tagName.toLowerCase(), `${element.tagName.toLowerCase()}.${classes}`);
+            const classes = element.className.split(' ').filter(cl => cl.includes(":") === false).join('.');
+            addToResult(result, element.tagName.toLowerCase(), `${element.tagName.toLowerCase()}.${classes}`, element);
         } else {
             const path = getPathTo(element);
-            addToResult(result, element.tagName.toLowerCase(), path);
+            addToResult(result, element.tagName.toLowerCase(), path, element);
         }
     }
 
     return result;
 }
 
-function addToResult(result, tagName, selector) {
+function addToResult(result, tagName, selector, element) {
     if (!result[tagName]) {
         result[tagName] = [];
     }
 
-    result[tagName].push(selector)
+    result[tagName].push({
+        selector: selector,
+        text: element.innerText
+    })
 }
 
 function getPathTo(element) {
