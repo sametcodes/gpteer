@@ -1,4 +1,4 @@
-function parseDocument(document, lookingFor = ["button", "input"]) {
+function parseDocument(document, lookingFor = ["button", "input", "ul", "li", "a", "form"]) {
     let result = {};
 
     let allElements = document.getElementsByTagName('*');
@@ -31,13 +31,14 @@ function addToResult(result, tagName, selector, element) {
 
     result[tagName].push({
         selector: selector,
+        name: element.name,
         text: element.innerText
     })
 }
 
 function getPathTo(element) {
     if (element.id !== '')
-        return 'id("' + element.id + '")';
+        return '#' + element.id;
     if (element === document.body)
         return element.tagName;
 

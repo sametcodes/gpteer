@@ -17,6 +17,8 @@ app.use((req, res, next) => {
 
 app.get("/visit", controller.visit);
 app.get("/click", controller.click);
+app.get("/search", controller.observe);
+app.get("/router", controller.router);
 app.get("/type", controller.type);
 app.get("/wait", controller.wait);
 app.get("/exit", controller.exit);

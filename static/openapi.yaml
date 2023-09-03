@@ -15,6 +15,7 @@ paths:
           name: url
           schema:
             type: string
+            enum: [back, forward, reload]
           required: true
           description: The url of the website to visit.
       responses:
@@ -33,6 +34,28 @@ paths:
             type: string
           required: true
           description: The selector to click on
+        - in: query
+          name: xpath
+          schema:
+            type: boolean
+          default: false
+          description: Whether the selector is a xpath selector
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+  /observe:
+    get:
+      operationId: observe
+      summary: Observe page body with XPath selector
+      parameters:
+        - in: query
+          name: xpath
+          schema:
+            type: string
+          required: true
+          description: The xpath selector to observe
       responses:
         "200":
           description: OK
@@ -50,6 +73,12 @@ paths:
           required: true
           description: The selector of the input field
         - in: query
+          name: xpath
+          schema:
+            type: boolean
+          default: false
+          description: Whether the selector is a xpath selector
+        - in: query
           name: text
           schema:
             type: string
@@ -62,6 +91,23 @@ paths:
           required: false
           default: true
           description: Whether to press enter after typing
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+  /router:
+    get:
+      operationId: router
+      summary: Handle router
+      parameters:
+        - in: query
+          name: action
+          schema:
+            type: string
+            enum: [back, forward, reload]
+          required: true
+          description: The action to perform on the router
       responses:
         "200":
           description: OK
