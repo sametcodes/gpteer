@@ -1,4 +1,4 @@
-function parseDocument(document, lookingFor = ["button", "input", "ul", "li", "a", "form"]) {
+function parseDocument(document, lookingFor = ["input", "form", "button"]) {
     let result = {};
 
     let allElements = document.getElementsByTagName('*');

@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
 import { closePage, getPage } from '../model/browser';
 import { waitForTimeout } from '../utils';
+import fs from 'fs';
+import fetch from 'node-fetch';
 
-type VisitRequestQuery = { url: string, }
+import * as actions from '../actions/get';
+
+type VisitRequestQuery = { action: "visit", url: string; }
 export const visit = async (req: Request, res: Response) => {
     const page = await getPage();
     const { url } = req.query as VisitRequestQuery;
@@ -19,61 +23,92 @@ export const visit = async (req: Request, res: Response) => {
     return res.status(200).json(mapObject);
 }
 
-type ClickRequestQuery = { selector: string, xpath?: boolean }
+type ClickRequestQuery = { action: "click", selector: string, xpath?: "true" | "false" }
 export const click = async (req: Request, res: Response) => {
-    const page = await getPage();
-    const { selector, xpath = false } = req.query as unknown as ClickRequestQuery;
+    try{
+        const page = await getPage();
+        const { selector, xpath = "true" } = req.query as unknown as ClickRequestQuery;
 
-    if (!selector) {
-        res.status(400).send('Missing selector parameter');
-        return;
+        if (!selector) {
+            res.status(400).send('Missing selector parameter');
+            return;
+        }
+
+        let element;
+        if (xpath === "true") element = await page.waitForXPath(selector);
+        else element = await page.waitForSelector(selector);
+        if (!element) return res.status(400).send('Element not found');
+
+        await element.click();
+        await waitForTimeout(2000);
+
+        const mapObject = await page.evaluate(() => {
+            // @ts-ignore
+            return parseDocument(document)
+        });
+
+        return res.status(200).json(mapObject);
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                name: err.name,
+                message: err.message
+            })
+        }
     }
-
-    let element;
-    if (xpath) element = await page.waitForXPath(selector);
-    else element = await page.waitForSelector(selector);
-
-    await element?.click();
-    await waitForTimeout(2000);
-
-    const mapObject = await page.evaluate(() => {
-        // @ts-ignore
-        return parseDocument(document)
-    });
-
-    return res.status(200).json(mapObject);
 }
 
-type TypeRequestQuery = { selector: string, text: string, xpath?: boolean, pressEnter?: string }
+type TypeRequestQuery = { action: "type", selector: string, text: string, xpath?: "true" | "false", pressEnter?: string }
 export const type = async (req: Request, res: Response) => {
-    const page = await getPage();
-    const { selector, text, xpath = false, pressEnter = "true" } = req.query as unknown as TypeRequestQuery;
+    try {
+        const page = await getPage();
+        const { selector, text, xpath = "true", pressEnter = "true" } = req.query as unknown as TypeRequestQuery;
 
-    if (!selector) {
-        res.status(400).send('Missing selector parameter');
-        return;
+        console.log({
+            selector,
+            text,
+            xpath,
+            pressEnter
+        })
+
+        if (!selector) {
+            res.status(400).send('Missing selector parameter');
+            return;
+        }
+
+        if (!text) {
+            res.status(400).send('Missing text parameter');
+            return;
+        }
+
+        let element;
+        if (xpath === "true") { element = await page.waitForXPath(selector); }
+        else { element = await page.waitForSelector(selector); }
+
+        if (!element) { return res.status(400).send('Element not found'); }
+
+        await element.type(text, { delay: 100 });
+        if (pressEnter === "true") await page.keyboard.press('Enter');
+        await waitForTimeout(2000);
+
+        const mapObject = await page.evaluate(() => {
+            // @ts-ignore
+            return parseDocument(document)
+        });
+        return res.status(200).json(mapObject);
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                name: err.name,
+                message: err.message
+            })
+        }
     }
-
-    if (!text) {
-        res.status(400).send('Missing text parameter');
-        return;
-    }
-
-    let element;
-    if (xpath) element = await page.waitForXPath(selector);
-    else element = await page.waitForSelector(selector);
-
-    await element?.type(text, { delay: 100 });
-    if (pressEnter === "true") await page.keyboard.press('Enter');
-    await waitForTimeout(2000);
-
-    const mapObject = await page.evaluate(() => {
-        // @ts-ignore
-        return parseDocument(document)
-    });
-    return res.status(200).json(mapObject);
 }
 
+type WaitRequestQuery = { action: "wait", time: string };
 export const wait = async (req: Request, res: Response) => {
     const page = await getPage();
     const { time } = req.query;
@@ -88,6 +123,7 @@ export const wait = async (req: Request, res: Response) => {
     return res.status(200).send('OK');
 }
 
+type ObserveRequestQuery = { action: "observe", selector: string, xpath?: "true" | "false" }
 export const observe = async (req: Request, res: Response) => {
     const xpath = req.query.xpath as string;
     const page = await getPage();
@@ -103,30 +139,81 @@ export const observe = async (req: Request, res: Response) => {
     });
     return res.status(200).json(mapObject);
 }
-
+type RouterRequestQuery = { action: "router", payload: "back" | "forward" | "reload"; }
 export const router = async (req: Request, res: Response) => {
-    const action = req.query.action as string;
-    const page = await getPage();
+    try {
+        const { payload } = req.query as unknown as RouterRequestQuery;
+        const page = await getPage();
 
     const actions = ['back', 'forward', 'reload'];
 
-    if(!actions.includes(action)) {
-        res.status(400).send(`Invalid action parameter. Must be one of ${actions.join(', ')}.`);
+        if (!actions.includes(payload)) {
+            res.status(400).send(`Invalid payload parameter. Must be one of ${actions.join(', ')}.`);
+            return;
+        }
+
+        if (payload === 'back') await page.goBack();
+        if (payload === 'forward') await page.goForward();
+        if (payload === 'reload') await page.reload();
+
+        const mapObject = await page.evaluate(() => {
+            // @ts-ignore
+            return parseDocument(document)
+        });
+        return res.status(200).json(mapObject);
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                title: err.name,
+                message: err.message
+            })
+        }
+    }
+}
+
+type SaveTaskRequestQuery = { action: "save" }
+export const savetask = async (req: Request, res: Response) => {
+    const { name, tasks } = req.body;
+
+    if (!name) {
+        res.status(400).send('Missing name parameter');
         return;
     }
 
-    if(action === 'back') await page.goBack();
-    if(action === 'forward') await page.goForward();
-    if(action === 'reload') await page.reload();
+    const timestamp = Date.now();
+    const macro = { name: name, tasks: tasks, timestamp: timestamp }
+    fs.writeFileSync(`./tasks/${name}_${timestamp}.json`, JSON.stringify(macro, null, 2));
 
-    const mapObject = await page.evaluate(() => {
-        // @ts-ignore
-        return parseDocument(document)
-    });
-    return res.status(200).json(mapObject);
+    return res.status(200).send('OK');
 }
 
+type ExitRequestQuery = { action: "exit" }
 export const exit = async (req: Request, res: Response) => {
     await closePage();
     return res.status(200).send('OK');
+}
+
+type MacroTaskType = VisitRequestQuery | ClickRequestQuery | TypeRequestQuery | WaitRequestQuery | ObserveRequestQuery | RouterRequestQuery;
+type ReplayRequestQuery = { action: "replay", name: string }
+export const replay = async (req: Request, res: Response) => {
+    const { name } = req.query as unknown as ReplayRequestQuery;
+
+    const taskOverriden = req.body;
+
+    if (!name) return res.status(400).send('Missing name parameter');
+    if (!fs.existsSync(`./tasks/${name}.json`)) return res.status(400).send('Task not found');
+
+    const macro = JSON.parse(fs.readFileSync(`./tasks/${name}.json`, 'utf8')) as { name: string, tasks: MacroTaskType[], timestamp: number }
+
+    for (let task of macro.tasks) {
+        const { action, ...params } = task;
+        const searchParams = new URLSearchParams(params as any)
+        const url = new URL("http://localhost:8008" + actions[action].path + "?" + searchParams);
+        console.log("[TASK]", action, url.toString())
+        await fetch(url, { method: actions[action].method }).then(res => res.text())
+        await waitForTimeout(2000);
+    }
+
+    return res.status(200).send("OK");
 }
