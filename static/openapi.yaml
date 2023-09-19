@@ -26,7 +26,7 @@ paths:
   /click:
     get:
       operationId: click
-      summary: Click on a selector
+      summary: Click on a node.
       parameters:
         - in: query
           name: selector
@@ -38,8 +38,9 @@ paths:
           name: xpath
           schema:
             type: boolean
-          default: false
-          description: Whether the selector is a xpath selector
+          default: true
+          required: true
+          description: Whether the selector is a xpath selector or not. Default is true.
       responses:
         "200":
           description: OK
@@ -53,9 +54,9 @@ paths:
         - in: query
           name: xpath
           schema:
-            type: string
-          required: true
-          description: The xpath selector to observe
+            type: boolean
+          default: true
+          description: Whether the selector is a xpath selector or not. Default is true.
       responses:
         "200":
           description: OK
@@ -71,19 +72,20 @@ paths:
           schema:
             type: string
           required: true
-          description: The selector of the input field
-        - in: query
-          name: xpath
-          schema:
-            type: boolean
-          default: false
-          description: Whether the selector is a xpath selector
+          description: The selector of the input field.
         - in: query
           name: text
           schema:
             type: string
           required: true
           description: The text to type
+        - in: query
+          name: xpath
+          schema:
+            type: boolean
+          default: true
+          required: true
+          description: Whether the selector is a xpath selector or not. Default is true.
         - in: query
           name: pressEnter
           schema:
