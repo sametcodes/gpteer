@@ -4,79 +4,112 @@ import { waitForTimeout } from '../utils';
 
 type VisitRequestQuery = { url: string, }
 export const visit = async (req: Request, res: Response) => {
-    const page = await getPage();
-    const { url } = req.query as VisitRequestQuery;
+    try {
+        const page = await getPage();
+        const { url } = req.query as VisitRequestQuery;
 
-    if (!url) return res.status(400).send('Missing site parameter');
+        if (!url) return res.status(400).send('Missing site parameter');
 
-    await page.goto(url, { waitUntil: 'networkidle2' });
-    await waitForTimeout(2000);
+        await page.goto(url, { waitUntil: 'networkidle2' });
+        await waitForTimeout(2000);
 
-    const mapObject = await page.evaluate(() => {
-        // @ts-ignore
-        return parseDocument(document)
-    });
-    return res.status(200).json(mapObject);
+        const mapObject = await page.evaluate(() => {
+            // @ts-ignore
+            return parseDocument(document)
+        });
+        return res.status(200).json(mapObject);
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                name: err.name,
+                message: err.message
+            })
+        }
+    }
 }
 
-type ClickRequestQuery = { selector: string, xpath?: boolean }
+type ClickRequestQuery = { selector: string, xpath?: "true" | "false" }
 export const click = async (req: Request, res: Response) => {
-    const page = await getPage();
-    const { selector, xpath = false } = req.query as unknown as ClickRequestQuery;
+    try {
 
-    if (!selector) {
-        res.status(400).send('Missing selector parameter');
-        return;
+        const page = await getPage();
+        const { selector, xpath = true } = req.query as unknown as ClickRequestQuery;
+
+        if (!selector) {
+            res.status(400).send('Missing selector parameter');
+            return;
+        }
+
+        let element;
+        if (xpath === "true") element = await page.waitForXPath(selector);
+        else element = await page.waitForSelector(selector);
+        if (!element) return res.status(400).send('Element not found');
+
+        await element.click();
+        await waitForTimeout(2000);
+
+        const mapObject = await page.evaluate(() => {
+            // @ts-ignore
+            return parseDocument(document)
+        });
+
+        return res.status(200).json(mapObject);
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                name: err.name,
+                message: err.message
+            })
+        }
     }
-
-    let element;
-    if (xpath) element = await page.waitForXPath(selector);
-    else element = await page.waitForSelector(selector);
-
-    await element?.click();
-    await waitForTimeout(2000);
-
-    const mapObject = await page.evaluate(() => {
-        // @ts-ignore
-        return parseDocument(document)
-    });
-
-    return res.status(200).json(mapObject);
 }
 
-type TypeRequestQuery = { selector: string, text: string, xpath?: boolean, pressEnter?: string }
+type TypeRequestQuery = { selector: string, text: string, xpath?: "true" | "false", pressEnter?: string }
 export const type = async (req: Request, res: Response) => {
-    const page = await getPage();
-    const { selector, text, xpath = false, pressEnter = "true" } = req.query as unknown as TypeRequestQuery;
+    try {
+        const page = await getPage();
+        const { selector, text, xpath = true, pressEnter = "true" } = req.query as unknown as TypeRequestQuery;
 
-    if (!selector) {
-        res.status(400).send('Missing selector parameter');
-        return;
+        if (!selector) {
+            res.status(400).send('Missing selector parameter');
+            return;
+        }
+
+        if (!text) {
+            res.status(400).send('Missing text parameter');
+            return;
+        }
+
+        let element;
+        if (xpath === "true") element = await page.waitForXPath(selector);
+        else element = await page.waitForSelector(selector);
+        if (!element) return res.status(400).send('Element not found');
+
+        await element.type(text, { delay: 100 });
+        if (pressEnter === "true") await page.keyboard.press('Enter');
+        await waitForTimeout(2000);
+
+        const mapObject = await page.evaluate(() => {
+            // @ts-ignore
+            return parseDocument(document)
+        });
+        return res.status(200).json(mapObject);
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                name: err.name,
+                message: err.message
+            })
+        }
     }
-
-    if (!text) {
-        res.status(400).send('Missing text parameter');
-        return;
-    }
-
-    let element;
-    if (xpath) element = await page.waitForXPath(selector);
-    else element = await page.waitForSelector(selector);
-
-    await element?.type(text, { delay: 100 });
-    if (pressEnter === "true") await page.keyboard.press('Enter');
-    await waitForTimeout(2000);
-
-    const mapObject = await page.evaluate(() => {
-        // @ts-ignore
-        return parseDocument(document)
-    });
-    return res.status(200).json(mapObject);
 }
 
+type WaitRequestQuery = { time: string };
 export const wait = async (req: Request, res: Response) => {
-    const page = await getPage();
-    const { time } = req.query;
+    const { time } = req.query as unknown as WaitRequestQuery;
 
     if (!time) {
         res.status(400).send('Missing time parameter');
@@ -84,46 +117,72 @@ export const wait = async (req: Request, res: Response) => {
     }
 
     await waitForTimeout(2000);
-
     return res.status(200).send('OK');
 }
 
+type ObserveRequestQuery = { selector: string, xpath?: "true" | false }
 export const observe = async (req: Request, res: Response) => {
-    const xpath = req.query.xpath as string;
-    const page = await getPage();
+    try {
+        const { selector, xpath } = req.query as unknown as ObserveRequestQuery;
+        const page = await getPage();
 
-    if (!xpath) {
-        res.status(400).send('Missing xpath parameter');
-        return;
+        if (!selector) {
+            res.status(400).send('Missing selector parameter');
+            return;
+        }
+
+        let element;
+        if (xpath === "true") element = await page.waitForXPath(selector);
+        else element = await page.waitForSelector(selector);
+        if (!element) return res.status(400).send('Element not found');
+
+        return res.status(200).json({
+            selector: selector,
+            exists: true,
+            clickable: await element.isIntersectingViewport(),
+            visible: await element.isIntersectingViewport()
+        })
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                title: err.name,
+                message: err.message
+            })
+        }
     }
-
-    const mapObject = await page.evaluate(() => {
-        // @ts-ignore
-        return parseDocument(document)
-    });
-    return res.status(200).json(mapObject);
 }
-
+type RouterRequestQuery = { action: "back" | "forward" | "reload"; }
 export const router = async (req: Request, res: Response) => {
-    const action = req.query.action as string;
-    const page = await getPage();
+    try {
+        const { action } = req.query.action as unknown as RouterRequestQuery;
+        const page = await getPage();
 
-    const actions = ['back', 'forward', 'reload'];
+        const actions = ['back', 'forward', 'reload'];
 
-    if(!actions.includes(action)) {
-        res.status(400).send(`Invalid action parameter. Must be one of ${actions.join(', ')}.`);
-        return;
+        if (!actions.includes(action)) {
+            res.status(400).send(`Invalid action parameter. Must be one of ${actions.join(', ')}.`);
+            return;
+        }
+
+        if (action === 'back') await page.goBack();
+        if (action === 'forward') await page.goForward();
+        if (action === 'reload') await page.reload();
+
+        const mapObject = await page.evaluate(() => {
+            // @ts-ignore
+            return parseDocument(document)
+        });
+        return res.status(200).json(mapObject);
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                title: err.name,
+                message: err.message
+            })
+        }
     }
-
-    if(action === 'back') await page.goBack();
-    if(action === 'forward') await page.goForward();
-    if(action === 'reload') await page.reload();
-
-    const mapObject = await page.evaluate(() => {
-        // @ts-ignore
-        return parseDocument(document)
-    });
-    return res.status(200).json(mapObject);
 }
 
 export const exit = async (req: Request, res: Response) => {

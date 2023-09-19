@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import * as controller from './controller';
 import morgan from 'morgan'
 
