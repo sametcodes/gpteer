@@ -37,7 +37,8 @@ paths:
         - in: query
           name: xpath
           schema:
-            type: boolean
+            type: string
+            enum: [true, false]
           default: true
           required: true
           description: Whether the selector is a xpath selector or not. Default is true.
@@ -54,7 +55,8 @@ paths:
         - in: query
           name: xpath
           schema:
-            type: boolean
+            type: string
+            enum: [true, false]
           default: true
           description: Whether the selector is a xpath selector or not. Default is true.
       responses:
@@ -82,7 +84,8 @@ paths:
         - in: query
           name: xpath
           schema:
-            type: boolean
+            type: string
+            enum: [true, false]
           default: true
           required: true
           description: Whether the selector is a xpath selector or not. Default is true.
