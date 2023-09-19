@@ -64,7 +64,7 @@ paths:
           description: Not found
   /type:
     get:
-      operationId: typeText
+      operationId: type
       summary: Type texts on a input field. Use xpath=false to use CSS selectors.
       parameters:
         - in: query
@@ -104,12 +104,12 @@ paths:
       summary: Handle router
       parameters:
         - in: query
-          name: action
+          name: payload
           schema:
             type: string
             enum: [back, forward, reload]
           required: true
-          description: The action to perform on the router
+          description: The payload to perform on the router
       responses:
         "200":
           description: OK
@@ -135,6 +135,55 @@ paths:
     get:
       operationId: exit
       summary: Exit the browser
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+  /savetask:
+    post:
+      operationId: savetask
+      summary: >
+        Saves the latest task to a file as JSON.
+
+        Here is an example request body for the task format:
+        {
+          "name": "visit_google",
+          "tasks": [
+            {
+              "action": "visit",
+              "url": "https://www.google.com"
+            },
+            {
+              "action": "click",
+              "selector": "input[name='btnK']"
+            }
+          ]
+        }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: The name of the task. Only use alphanumeric characters and underscores (a-zA-Z0-9_).
+                tasks:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      action:
+                        type: string
+                      url:
+                        type: string
+                        format: uri
+                      selector:
+                        type: string
+                      text:
+                        type: string
+                  description: The task to save.
       responses:
         "200":
           description: OK

@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
-import * as controller from './controller';
 import morgan from 'morgan'
+import actions from './actions';
 
 const app = express();
 
@@ -15,16 +15,12 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get("/visit", controller.visit);
-app.get("/click", controller.click);
-app.get("/search", controller.observe);
-app.get("/router", controller.router);
-app.get("/type", controller.type);
-app.get("/wait", controller.wait);
-app.get("/exit", controller.exit);
+
+actions.get.forEach((action) => app.get(action.path, action.controller))
+actions.post.forEach((action) => app.post(action.path, action.controller))
 
 app.use(express.static('static'));
 
 app.listen(8008, () => {
-    console.log('PuppeteerGPT listening on port 8008');
+    console.log('gpteer listening on port 8008');
 });
