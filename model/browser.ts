@@ -5,15 +5,9 @@ let browser: Browser | null;
 let page: Page | null;
 
 export const launchPage = async () => {
-    browser = await puppeteer.launch({
-        headless: false,
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage'
-        ]
-    });
+    browser = await puppeteer.connect({ browserWSEndpoint: process.env.BROWSER_WS_ENDPOINT })
     page = await browser.newPage();
+    page.setViewport({ width: 1680, height: 1050 });
 
     const preloadFile = fs.readFileSync('./scripts/index.js', 'utf8');
     await page.evaluateOnNewDocument(preloadFile);
