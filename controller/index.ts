@@ -198,27 +198,38 @@ export const router = async (req: Request, res: Response) => {
 
 type EvaluateRequestQuery = { action: "evaluate", expression: string }
 export const evaluate = async (req: Request, res: Response) => {
-    const { expression } = req.query as unknown as EvaluateRequestQuery;
-    const page = await getPage();
+    try {
+        const { expression } = req.query as unknown as EvaluateRequestQuery;
+        const page = await getPage();
 
-    if (!expression) {
-        res.status(400).send('Missing expression parameter');
-        return;
+        if (!expression) {
+            res.status(400).send('Missing expression parameter');
+            return;
+        }
+
+        const evaluateResponse = await page.evaluate(expression);
+
+        if (!evaluateResponse) return res.status(400).json({
+            success: false,
+            message: "Expression failed",
+            response: evaluateResponse
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Evaluated expression",
+            response: evaluateResponse
+        });
+    } catch (err) {
+        if (err instanceof Error) {
+            console.log(err)
+            return res.status(400).json({
+                error: true,
+                title: err.name,
+                message: err.message
+            })
+        }
     }
-
-    const evaluateResponse = await page.evaluate(expression);
-
-    if (!evaluateResponse) return res.status(400).json({
-        success: false,
-        message: "Expression failed",
-        response: evaluateResponse
-    });
-
-    return res.status(200).json({
-        success: true,
-        message: "Evaluated expression",
-        response: evaluateResponse
-    });
 }
 
 type ExitRequestQuery = { action: "exit" }
