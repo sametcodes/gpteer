@@ -35,7 +35,7 @@ export const visit = async (req: Request, res: Response) => {
 
 type ClickRequestQuery = { action: "click", selector: string, xpath?: "true" | "false" }
 export const click = async (req: Request, res: Response) => {
-    try{
+    try {
         const page = await getPage();
         const { selector, xpath = "true" } = req.query as unknown as ClickRequestQuery;
 
@@ -45,11 +45,15 @@ export const click = async (req: Request, res: Response) => {
         }
 
         let element;
-        if (xpath === "true") element = await page.waitForXPath(selector);
-        else element = await page.waitForSelector(selector);
+        if (xpath === "true") { [element] = await page.$x(selector); }
+        else { [element] = await page.$$(selector); }
+
         if (!element) return res.status(400).send('Element not found');
 
+        const isIntersecting = await element.isIntersectingViewport();
+        if(!isIntersecting) await element.scrollIntoView();
         await element.click();
+
         await waitForTimeout(2000);
 
         const mapObject = await page.evaluate(() => {
