@@ -23,8 +23,5 @@ export const getPage = async () => {
 
 export const closePage = async () => {
     await page?.close();
-    await browser?.close();
-
     page = null;
-    browser = null;
 }
