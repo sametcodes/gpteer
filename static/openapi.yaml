@@ -50,7 +50,7 @@ paths:
   /observe:
     get:
       operationId: observe
-      summary: Observe page body with XPath selector
+      summary: Observe page body with XPath selector. Returns if the selector is existing, clickable, or visible.
       parameters:
         - in: query
           name: xpath
@@ -59,6 +59,11 @@ paths:
             enum: [true, false]
           default: true
           description: Whether the selector is a xpath selector or not. Default is true.
+        - in: query
+          name: selector
+          schema: 
+            type: string
+          required: true
       responses:
         "200":
           description: OK
@@ -118,6 +123,24 @@ paths:
           description: OK
         "404":
           description: Not found
+  /evaluate:
+    get:
+      operationId: evaluate
+      summary: >
+        Evaluate a JavaScript expression on the page.
+        Example: document.querySelector('h1').textContent
+      parameters:
+        - in: query
+          name: expression
+          schema:
+            type: string
+          required: true
+          description: The JavaScript expression to evaluate.
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
   /wait:
     get:
       operationId: wait
@@ -147,20 +170,12 @@ paths:
     post:
       operationId: savetask
       summary: >
-        Saves the latest task to a file as JSON.
-
-        Here is an example request body for the task format:
+        Saves the latest task to a file as JSON. Only use this if user says "save task" in the prompt.
         {
           "name": "visit_google",
           "tasks": [
-            {
-              "action": "visit",
-              "url": "https://www.google.com"
-            },
-            {
-              "action": "click",
-              "selector": "input[name='btnK']"
-            }
+            { "action": "visit", "url": "https://www.google.com" },
+            { "action": "click", "selector": "input[name='btnK']" }
           ]
         }
       requestBody:

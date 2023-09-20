@@ -17,11 +17,10 @@ export const visit = async (req: Request, res: Response) => {
         await page.goto(url, { waitUntil: 'networkidle2' });
         await waitForTimeout(2000);
 
-        const mapObject = await page.evaluate(() => {
-            // @ts-ignore
-            return parseDocument(document)
+        return res.status(200).json({
+            success: true,
+            message: "Page visited"
         });
-        return res.status(200).json(mapObject);
     } catch (err) {
         if (err instanceof Error) {
             return res.status(400).json({
@@ -45,23 +44,21 @@ export const click = async (req: Request, res: Response) => {
         }
 
         let element;
-        if (xpath === "true") { [element] = await page.$x(selector); }
+        if (xpath.toLowerCase() === "true") { [element] = await page.$x(selector); }
         else { [element] = await page.$$(selector); }
 
         if (!element) return res.status(400).send('Element not found');
 
         const isIntersecting = await element.isIntersectingViewport();
-        if(!isIntersecting) await element.scrollIntoView();
+        if (!isIntersecting) await element.scrollIntoView();
         await element.click();
 
         await waitForTimeout(2000);
 
-        const mapObject = await page.evaluate(() => {
-            // @ts-ignore
-            return parseDocument(document)
+        return res.status(200).json({
+            success: true,
+            message: "Element clicked"
         });
-
-        return res.status(200).json(mapObject);
     } catch (err) {
         if (err instanceof Error) {
             return res.status(400).json({
@@ -79,13 +76,6 @@ export const type = async (req: Request, res: Response) => {
         const page = await getPage();
         const { selector, text, xpath = "true", pressEnter = "true" } = req.query as unknown as TypeRequestQuery;
 
-        console.log({
-            selector,
-            text,
-            xpath,
-            pressEnter
-        })
-
         if (!selector) {
             res.status(400).send('Missing selector parameter');
             return;
@@ -97,20 +87,19 @@ export const type = async (req: Request, res: Response) => {
         }
 
         let element;
-        if (xpath === "true") { element = await page.waitForXPath(selector); }
+        if (xpath.toLowerCase() === "true") { element = await page.waitForXPath(selector); }
         else { element = await page.waitForSelector(selector); }
 
         if (!element) { return res.status(400).send('Element not found'); }
 
         await element.type(text, { delay: 100 });
-        if (pressEnter === "true") await page.keyboard.press('Enter');
+        if (pressEnter?.toLowerCase() === "true") await page.keyboard.press('Enter');
         await waitForTimeout(2000);
 
-        const mapObject = await page.evaluate(() => {
-            // @ts-ignore
-            return parseDocument(document)
+        return res.status(200).json({
+            success: true,
+            message: "Text typed.",
         });
-        return res.status(200).json(mapObject);
     } catch (err) {
         if (err instanceof Error) {
             return res.status(400).json({
@@ -132,13 +121,16 @@ export const wait = async (req: Request, res: Response) => {
     }
 
     await waitForTimeout(2000);
-    return res.status(200).send('OK');
+    return res.status(200).json({
+        success: true,
+        message: "Waited for " + time + "ms"
+    });
 }
 
 type ObserveRequestQuery = { action: "observe", selector: string, xpath?: "true" | "false" }
 export const observe = async (req: Request, res: Response) => {
     try {
-        const { selector, xpath } = req.query as unknown as ObserveRequestQuery;
+        const { selector, xpath = "true" } = req.query as unknown as ObserveRequestQuery;
         const page = await getPage();
 
         if (!selector) {
@@ -147,15 +139,19 @@ export const observe = async (req: Request, res: Response) => {
         }
 
         let element;
-        if (xpath === "true") element = await page.waitForXPath(selector);
+        if (xpath.toLowerCase() === "true") element = await page.waitForXPath(selector);
         else element = await page.waitForSelector(selector);
         if (!element) return res.status(400).send('Element not found');
 
         return res.status(200).json({
-            selector: selector,
-            exists: true,
-            clickable: await element.isIntersectingViewport(),
-            visible: await element.isIntersectingViewport()
+            success: true,
+            message: "Element found",
+            data: {
+                selector: selector,
+                exists: true,
+                clickable: await element.isIntersectingViewport(),
+                visible: await element.isIntersectingViewport()
+            }
         })
     } catch (err) {
         if (err instanceof Error) {
@@ -167,6 +163,7 @@ export const observe = async (req: Request, res: Response) => {
         }
     }
 }
+
 type RouterRequestQuery = { action: "router", payload: "back" | "forward" | "reload"; }
 export const router = async (req: Request, res: Response) => {
     try {
@@ -184,11 +181,10 @@ export const router = async (req: Request, res: Response) => {
         if (payload === 'forward') await page.goForward();
         if (payload === 'reload') await page.reload();
 
-        const mapObject = await page.evaluate(() => {
-            // @ts-ignore
-            return parseDocument(document)
+        return res.status(200).json({
+            success: true,
+            message: "Page router action taken: " + payload
         });
-        return res.status(200).json(mapObject);
     } catch (err) {
         if (err instanceof Error) {
             return res.status(400).json({
@@ -198,6 +194,40 @@ export const router = async (req: Request, res: Response) => {
             })
         }
     }
+}
+
+type EvaluateRequestQuery = { action: "evaluate", expression: string }
+export const evaluate = async (req: Request, res: Response) => {
+    const { expression } = req.query as unknown as EvaluateRequestQuery;
+    const page = await getPage();
+
+    if (!expression) {
+        res.status(400).send('Missing expression parameter');
+        return;
+    }
+
+    const evaluateResponse = await page.evaluate(expression);
+
+    if (!evaluateResponse) return res.status(400).json({
+        success: false,
+        message: "Expression failed",
+        response: evaluateResponse
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: "Evaluated expression",
+        response: evaluateResponse
+    });
+}
+
+type ExitRequestQuery = { action: "exit" }
+export const exit = async (req: Request, res: Response) => {
+    await closePage();
+    return res.status(200).json({
+        success: true,
+        message: "Browser closed"
+    });
 }
 
 type SaveTaskRequestQuery = { action: "save" }
@@ -213,13 +243,10 @@ export const savetask = async (req: Request, res: Response) => {
     const macro = { name: name, tasks: tasks, timestamp: timestamp }
     fs.writeFileSync(`./tasks/${name}_${timestamp}.json`, JSON.stringify(macro, null, 2));
 
-    return res.status(200).send('OK');
-}
-
-type ExitRequestQuery = { action: "exit" }
-export const exit = async (req: Request, res: Response) => {
-    await closePage();
-    return res.status(200).send('OK');
+    return res.status(200).json({
+        success: true,
+        message: "Task saved"
+    });
 }
 
 type MacroTaskType = VisitRequestQuery | ClickRequestQuery | TypeRequestQuery | WaitRequestQuery | ObserveRequestQuery | RouterRequestQuery;
@@ -243,5 +270,8 @@ export const replay = async (req: Request, res: Response) => {
         await waitForTimeout(2000);
     }
 
-    return res.status(200).send("OK");
+    return res.status(200).json({
+        success: true,
+        message: "Task replayed"
+    });
 }
