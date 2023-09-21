@@ -7,12 +7,28 @@ export const visit = {
     controller: controller.visit
 }
 
+
+export const mouse = {
+    method: "get",
+    action: "mouse",
+    path: "/mouse",
+    controller: controller.mouse
+}
+
 export const click = {
     method: "get",
     action: "click",
     path: "/click",
     controller: controller.click
 }
+
+export const hover = {
+    method: "get",
+    action: "hover",
+    path: "/hover",
+    controller: controller.hover
+}
+
 
 export const observe = {
     method: "get",
@@ -59,6 +75,7 @@ export const exit = {
 export default [
     visit,
     click,
+    hover,
     observe,
     router,
     type,

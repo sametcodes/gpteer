@@ -5,6 +5,7 @@ import fs from 'fs';
 import fetch from 'node-fetch';
 
 import * as actions from '../actions/get';
+import { MouseClickOptions, MouseMoveOptions, MouseOptions, Point, Protocol } from 'puppeteer';
 
 type VisitRequestQuery = { action: "visit", url: string; }
 export const visit = async (req: Request, res: Response) => {
@@ -21,6 +22,45 @@ export const visit = async (req: Request, res: Response) => {
             success: true,
             message: "Page visited"
         });
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                name: err.name,
+                message: err.message
+            })
+        }
+    }
+}
+
+type MouseRequestQuery = {
+    action: "mouse",
+    method: {
+        move?: { x: number, y: number, options: MouseMoveOptions },
+        down?: { options: MouseOptions },
+        up?: { options: MouseOptions },
+        click?: { x: number, y: number, options: MouseClickOptions },
+        wheel?: { deltaX: number, deltaY: number },
+        drag?: { start: Point, target: Point },
+        dragAndDrop?: { source: Point, target: Point, options: { delay: number } }
+    }
+}
+export const mouse = async (req: Request, res: Response) => {
+    try {
+        const page = await getPage();
+        const { method } = req.query as unknown as MouseRequestQuery;
+
+        if (!method) return res.status(400).send('Missing method parameter');
+
+        if (method.move) await page.mouse.move(method.move.x, method.move.y, method.move.options);
+        if (method.down) await page.mouse.down(method.down.options);
+        if (method.up) await page.mouse.up(method.up.options);
+        if (method.click) await page.mouse.click(method.click.x, method.click.y, method.click.options);
+        if (method.wheel) await page.mouse.wheel(method.wheel);
+        if (method.drag) await page.mouse.drag(method.drag.start, method.drag.target);
+        if (method.dragAndDrop) await page.mouse.dragAndDrop(method.dragAndDrop.source, method.dragAndDrop.target, method.dragAndDrop.options);
+
+        return res.status(200).json({ success: true, message: "Element clicked" });
     } catch (err) {
         if (err instanceof Error) {
             return res.status(400).json({
@@ -53,11 +93,46 @@ export const click = async (req: Request, res: Response) => {
         if (!isIntersecting) await element.scrollIntoView();
         await element.click();
 
-        await waitForTimeout(2000);
-
         return res.status(200).json({
             success: true,
             message: "Element clicked"
+        });
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                name: err.name,
+                message: err.message
+            })
+        }
+    }
+}
+
+type HoverRequestQuery = { action: "hover", selector: string, xpath?: "true" | "false" }
+export const hover = async (req: Request, res: Response) => {
+    try {
+        const page = await getPage();
+        const { selector, xpath = "true" } = req.query as unknown as ClickRequestQuery;
+
+        if (!selector) {
+            res.status(400).send('Missing selector parameter');
+            return;
+        }
+
+        let element;
+        if (xpath.toLowerCase() === "true") { [element] = await page.$x(selector); }
+        else { [element] = await page.$$(selector); }
+
+        if (!element) return res.status(400).send('Element not found');
+
+        const isIntersecting = await element.isIntersectingViewport();
+        if (!isIntersecting) await element.scrollIntoView();
+        await element.hover();
+
+
+        return res.status(200).json({
+            success: true,
+            message: "Element hovered"
         });
     } catch (err) {
         if (err instanceof Error) {
@@ -94,7 +169,6 @@ export const type = async (req: Request, res: Response) => {
 
         await element.type(text, { delay: 100 });
         if (pressEnter?.toLowerCase() === "true") await page.keyboard.press('Enter');
-        await waitForTimeout(2000);
 
         return res.status(200).json({
             success: true,
@@ -120,7 +194,7 @@ export const wait = async (req: Request, res: Response) => {
         return;
     }
 
-    await waitForTimeout(2000);
+    await waitForTimeout(Number(time));
     return res.status(200).json({
         success: true,
         message: "Waited for " + time + "ms"
@@ -278,7 +352,6 @@ export const replay = async (req: Request, res: Response) => {
         const url = new URL("http://localhost:8008" + actions[action].path + "?" + searchParams);
         console.log("[TASK]", action, url.toString())
         await fetch(url, { method: actions[action].method }).then(res => res.text())
-        await waitForTimeout(2000);
     }
 
     return res.status(200).json({

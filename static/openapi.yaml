@@ -23,6 +23,117 @@ paths:
           description: OK
         "404":
           description: Not found
+  /mouse:
+    get:
+      operationId: mouse
+      summary: Handle mouse.
+      parameters:
+        - in: query
+          name: method
+          schema:
+            type: object
+            properties:
+              move:
+                type: object
+                properties:
+                  x:
+                    type: number
+                  y:
+                    type: number
+                  options:
+                    type: object
+                    properties:
+                      steps:
+                        type: number
+              down:
+                type: object
+                properties:
+                  options:
+                    type: object
+                    properties:
+                      button: 
+                        type: string
+                        enum: [back, forward, left, right, middle]
+                      clickCount:
+                        type: number
+              up:
+                type: object
+                properties:
+                  options:
+                    type: object
+                    properties:
+                      button: 
+                        type: string
+                        enum: [back, forward, left, right, middle]
+                      clickCount:
+                        type: number
+              click:
+                type: object
+                properties:
+                  x:
+                    type: number
+                  y:
+                    type: number
+                  options:
+                    type: object
+                    properties:
+                      delay:
+                        type: number
+                      count:
+                        type: number
+              wheel:
+                type: object
+                properties:
+                  deltaX:
+                    type: number
+                  deltaY:
+                    type: number
+              drag:
+                type: object
+                properties:
+                  start:
+                    type: object
+                    properties:
+                      x:
+                        type: number
+                      y:
+                        type: number
+                  target:
+                    type: object
+                    properties:
+                      x:
+                        type: number
+                      y:
+                        type: number
+              dragAndDrop:
+                type: object
+                properties:
+                  source:
+                    type: object
+                    properties:
+                      x:
+                        type: number
+                      y:
+                        type: number
+                  target:
+                    type: object
+                    properties:
+                      x:
+                        type: number
+                      y:
+                        type: number
+                  options:
+                    type: object
+                    properties:
+                      delay:
+                        type: number
+          required: true
+          description: The method to perform on the mouse.
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
   /click:
     get:
       operationId: click
@@ -34,6 +145,30 @@ paths:
             type: string
           required: true
           description: The selector to click on
+        - in: query
+          name: xpath
+          schema:
+            type: string
+            enum: [true, false]
+          default: true
+          required: true
+          description: Whether the selector is a xpath selector or not. Default is true.
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+  /hover:
+    get:
+      operationId: hover
+      summary: Hover on a node.
+      parameters:
+        - in: query
+          name: selector
+          schema:
+            type: string
+          required: true
+          description: The selector to hover on
         - in: query
           name: xpath
           schema:
@@ -149,7 +284,7 @@ paths:
         - in: query
           name: time
           schema:
-            type: integer
+            type: number
           required: true
           description: Time to wait in seconds
       responses:
