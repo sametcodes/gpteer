@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import { closePage, getPage } from '../model/browser';
 import { waitForTimeout } from '../utils';
 import fs from 'fs';
-import fetch from 'node-fetch';
+import fetch, { BodyInit, HeaderInit } from 'node-fetch';
 
-import * as actions from '../actions/get';
+import { actions } from '../actions';
 import { MouseClickOptions, MouseMoveOptions, MouseOptions, Point, Protocol } from 'puppeteer';
 
 type VisitRequestQuery = { action: "visit", url: string; }
@@ -33,34 +33,66 @@ export const visit = async (req: Request, res: Response) => {
     }
 }
 
-type MouseRequestQuery = {
-    action: "mouse",
-    method: {
-        move?: { x: number, y: number, options: MouseMoveOptions },
-        down?: { options: MouseOptions },
-        up?: { options: MouseOptions },
-        click?: { x: number, y: number, options: MouseClickOptions },
-        wheel?: { deltaX: number, deltaY: number },
-        drag?: { start: Point, target: Point },
-        dragAndDrop?: { source: Point, target: Point, options: { delay: number } }
-    }
+type MouseMethods = {
+    move?: { x: number, y: number, options?: MouseMoveOptions },
+    down?: { options: MouseOptions },
+    up?: { options: MouseOptions },
+    click?: { x: number, y: number, options?: MouseClickOptions },
+    wheel?: { deltaX: number, deltaY: number },
+    drag?: { start: Point, target: Point },
+    dragAndDrop?: { source: Point, target: Point, options?: { delay: number } }
 }
+type MouseRequestQuery = { action: "mouse" }
 export const mouse = async (req: Request, res: Response) => {
     try {
         const page = await getPage();
-        const { method } = req.query as unknown as MouseRequestQuery;
 
-        if (!method) return res.status(400).send('Missing method parameter');
+        const mouseEvent = req.body as MouseMethods;
+        if (!mouseEvent) return res.status(400).send('Missing method parameter');
 
-        if (method.move) await page.mouse.move(method.move.x, method.move.y, method.move.options);
-        if (method.down) await page.mouse.down(method.down.options);
-        if (method.up) await page.mouse.up(method.up.options);
-        if (method.click) await page.mouse.click(method.click.x, method.click.y, method.click.options);
-        if (method.wheel) await page.mouse.wheel(method.wheel);
-        if (method.drag) await page.mouse.drag(method.drag.start, method.drag.target);
-        if (method.dragAndDrop) await page.mouse.dragAndDrop(method.dragAndDrop.source, method.dragAndDrop.target, method.dragAndDrop.options);
+        let eventResponse = [];
 
-        return res.status(200).json({ success: true, message: "Element clicked" });
+        if (mouseEvent.move) {
+            console.log("[MOVE]:", JSON.stringify(mouseEvent.move))
+            await page.mouse.move(mouseEvent.move.x, mouseEvent.move.y, mouseEvent.move.options);
+            eventResponse.push({ message: "Mouse move triggered", data: mouseEvent.move })
+        }
+        if (mouseEvent.down) {
+            console.log("[DOWN]:", JSON.stringify(mouseEvent.down))
+            await page.mouse.down(mouseEvent.down.options);
+            eventResponse.push({ message: "Mouse down triggered", data: mouseEvent.down })
+        }
+        if (mouseEvent.up) {
+            console.log("[UP]:", JSON.stringify(mouseEvent.up))
+            await page.mouse.up(mouseEvent.up.options);
+            eventResponse.push({ message: "Mouse up triggered", data: mouseEvent.up })
+        }
+        if (mouseEvent.click) {
+            console.log("[CLICK]:", JSON.stringify(mouseEvent.click))
+            await page.mouse.click(mouseEvent.click.x, mouseEvent.click.y, mouseEvent.click.options);
+            eventResponse.push({ message: "Mouse click triggered", data: mouseEvent.click })
+        }
+        if (mouseEvent.wheel) {
+            console.log("[WHEEL]:", JSON.stringify(mouseEvent.wheel))
+            await page.mouse.wheel(mouseEvent.wheel);
+            eventResponse.push({ message: "Mouse wheel triggered", data: mouseEvent.wheel })
+        }
+        if (mouseEvent.drag) {
+            console.log("[DRAG]:", JSON.stringify(mouseEvent.drag))
+            await page.mouse.drag(mouseEvent.drag.start, mouseEvent.drag.target);
+            eventResponse.push({ message: "Mouse drag triggered", data: mouseEvent.drag })
+        }
+        if (mouseEvent.dragAndDrop) {
+            console.log("[DRAG'N'DROP:]", JSON.stringify(mouseEvent.dragAndDrop))
+            await page.mouse.dragAndDrop(mouseEvent.dragAndDrop.source, mouseEvent.dragAndDrop.target, mouseEvent.dragAndDrop.options);
+            eventResponse.push({ message: "Mouse dragAndDrop triggered", data: mouseEvent.dragAndDrop })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Mouse event triggered",
+            response: eventResponse
+        });
     } catch (err) {
         if (err instanceof Error) {
             return res.status(400).json({
@@ -346,16 +378,42 @@ export const replay = async (req: Request, res: Response) => {
 
     const macro = JSON.parse(fs.readFileSync(`./tasks/${name}.json`, 'utf8')) as { name: string, tasks: MacroTaskType[], timestamp: number }
 
+    let steps = [];
     for (let task of macro.tasks) {
         const { action, ...params } = task;
-        const searchParams = new URLSearchParams(params as any)
-        const url = new URL("http://localhost:8008" + actions[action].path + "?" + searchParams);
-        console.log("[TASK]", action, url.toString())
-        await fetch(url, { method: actions[action].method }).then(res => res.text())
+        const method = actions[action].method;
+
+        let url: URL | null = null;
+        let body: BodyInit | undefined = undefined;
+        let headers: HeaderInit | undefined = undefined;
+
+        if (method.toUpperCase() === "GET") {
+            const searchParams = new URLSearchParams(params as any)
+            url = new URL("http://localhost:8008" + actions[action].path + "?" + searchParams);
+        }
+
+        if (method.toUpperCase() === "POST") {
+            url = new URL("http://localhost:8008" + actions[action].path);
+            body = JSON.stringify(params);
+            headers = { 'Content-Type': 'application/json' };
+        }
+
+        if (!url) continue;
+        try {
+            const response = await fetch(url, { method, headers, body }).then(res => {
+                if (res.headers.get("content-type")?.includes("application/json")) return res.json();
+                return res.text();
+            })
+            steps.push({ action, response });
+        } catch (err) {
+            console.log(err)
+            steps.push({ action, response: err });
+        }
     }
 
     return res.status(200).json({
         success: true,
-        message: "Task replayed"
+        message: "Task replayed",
+        steps
     });
 }

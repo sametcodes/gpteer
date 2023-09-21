@@ -8,13 +8,6 @@ export const visit = {
 }
 
 
-export const mouse = {
-    method: "get",
-    action: "mouse",
-    path: "/mouse",
-    controller: controller.mouse
-}
-
 export const click = {
     method: "get",
     action: "click",

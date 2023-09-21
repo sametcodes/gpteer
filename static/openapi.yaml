@@ -24,111 +24,128 @@ paths:
         "404":
           description: Not found
   /mouse:
-    get:
+    post:
       operationId: mouse
       summary: Handle mouse.
-      parameters:
-        - in: query
-          name: method
-          schema:
-            type: object
-            properties:
-              move:
-                type: object
-                properties:
-                  x:
-                    type: number
-                  y:
-                    type: number
-                  options:
-                    type: object
-                    properties:
-                      steps:
-                        type: number
-              down:
-                type: object
-                properties:
-                  options:
-                    type: object
-                    properties:
-                      button: 
-                        type: string
-                        enum: [back, forward, left, right, middle]
-                      clickCount:
-                        type: number
-              up:
-                type: object
-                properties:
-                  options:
-                    type: object
-                    properties:
-                      button: 
-                        type: string
-                        enum: [back, forward, left, right, middle]
-                      clickCount:
-                        type: number
-              click:
-                type: object
-                properties:
-                  x:
-                    type: number
-                  y:
-                    type: number
-                  options:
-                    type: object
-                    properties:
-                      delay:
-                        type: number
-                      count:
-                        type: number
-              wheel:
-                type: object
-                properties:
-                  deltaX:
-                    type: number
-                  deltaY:
-                    type: number
-              drag:
-                type: object
-                properties:
-                  start:
-                    type: object
-                    properties:
-                      x:
-                        type: number
-                      y:
-                        type: number
-                  target:
-                    type: object
-                    properties:
-                      x:
-                        type: number
-                      y:
-                        type: number
-              dragAndDrop:
-                type: object
-                properties:
-                  source:
-                    type: object
-                    properties:
-                      x:
-                        type: number
-                      y:
-                        type: number
-                  target:
-                    type: object
-                    properties:
-                      x:
-                        type: number
-                      y:
-                        type: number
-                  options:
-                    type: object
-                    properties:
-                      delay:
-                        type: number
-          required: true
-          description: The method to perform on the mouse.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                move:
+                  type: object
+                  description: >
+                    The mousemove event is sent to an element when the mouse pointer moves inside the element. Use wheel for scrolling.
+                  properties:
+                    x:
+                      type: number
+                      required: true
+                    y:
+                      type: number
+                      required: true
+                    options:
+                      type: object
+                      properties:
+                        steps:
+                          type: number
+                down:
+                  type: object
+                  description: >
+                    The mousedown event is sent to an element when the mouse pointer is over the element, and the mouse button is pressed. Any HTML element can receive this event.
+                  properties:
+                    options:
+                      type: object
+                      properties:
+                        button:
+                          type: string
+                          enum: [back, forward, left, right, middle]
+                          required: true
+                        clickCount:
+                          type: number
+                up:
+                  type: object
+                  description: >
+                    The mouseup event is sent to an element when the mouse pointer is over the element, and the mouse button is released. Any HTML element can receive this event.
+                  properties:
+                    options:
+                      type: object
+                      properties:
+                        button:
+                          type: string
+                          enum: [back, forward, left, right, middle]
+                          required: true
+                        clickCount:
+                          type: number
+                click:
+                  type: object
+                  description: >
+                    The click event is sent to an element when the mouse pointer is over the element, and the mouse button is pressed and released. Any HTML element can receive this event.
+                  properties:
+                    x:
+                      type: number
+                    y:
+                      type: number
+                    options:
+                      type: object
+                      properties:
+                        delay:
+                          type: number
+                        count:
+                          type: number
+                wheel:
+                  type: object
+                  description: >
+                    The wheel event is sent to an element when the mouse wheel is rolled up or down over the element. This can be used for scrolling.
+                  properties:
+                    deltaX:
+                      type: number
+                      required: true
+                    deltaY:
+                      type: number
+                      required: true
+                # drag:
+                #   type: object
+                #   properties:
+                #     start:
+                #       type: object
+                #       properties:
+                #         x:
+                #           type: number
+                #           required: true
+                #         y:
+                #           type: number
+                #           required: true
+                #     target:
+                #       type: object
+                #       properties:
+                #         x:
+                #           type: number
+                #           required: true
+                #         y:
+                #           type: number
+                #           required: true
+                # dragAndDrop:
+                #   type: object
+                #   properties:
+                #     source:
+                #       type: object
+                #       properties:
+                #         x:
+                #           type: number
+                #           required: true
+                #         y:
+                #           type: number
+                #           required: true
+                #     target:
+                #       type: object
+                #       properties:
+                #         x:
+                #           type: number
+                #           required: true
+                #         y:
+                #           type: number
+                #           required: true
       responses:
         "200":
           description: OK
@@ -196,7 +213,7 @@ paths:
           description: Whether the selector is a xpath selector or not. Default is true.
         - in: query
           name: selector
-          schema: 
+          schema:
             type: string
           required: true
       responses:
@@ -263,7 +280,7 @@ paths:
       operationId: evaluate
       summary: >
         Evaluate a JavaScript expression on the page.
-        Example: document.querySelector('h1').textContent
+        Example: (() => { return JSON.stringify({ text: document.querySelector('h1').textContent }) })()
       parameters:
         - in: query
           name: expression
@@ -328,13 +345,6 @@ paths:
                     type: object
                     properties:
                       action:
-                        type: string
-                      url:
-                        type: string
-                        format: uri
-                      selector:
-                        type: string
-                      text:
                         type: string
                   description: The task to save.
       responses:
