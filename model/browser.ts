@@ -16,7 +16,9 @@ export const launchPage = async () => {
 }
 
 export const getPage = async () => {
-    if (!page) return launchPage();
+    if (!page) {
+        return launchPage();
+    }
 
     return page;
 }
