@@ -1,0 +1,30 @@
+{
+  "name": "disappearing_elements",
+  "tasks": [
+    {
+      "action": "visit",
+      "url": "https://the-internet.herokuapp.com/disappearing_elements"
+    },
+    {
+      "action": "hover",
+      "selector": "//ul/li[1]",
+      "xpath": "True"
+    },
+    {
+      "action": "hover",
+      "selector": "//ul/li[2]",
+      "xpath": "True"
+    },
+    {
+      "action": "hover",
+      "selector": "//ul/li[3]",
+      "xpath": "True"
+    },
+    {
+      "action": "hover",
+      "selector": "//ul/li[4]",
+      "xpath": "True"
+    }
+  ],
+  "timestamp": 1695236242314
+}

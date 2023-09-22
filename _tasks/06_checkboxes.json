@@ -1,0 +1,20 @@
+{
+  "name": "checkboxes",
+  "tasks": [
+    {
+      "action": "visit",
+      "url": "https://the-internet.herokuapp.com/checkboxes"
+    },
+    {
+      "action": "click",
+      "selector": "//input[@type='checkbox'][2]",
+      "xpath": "True"
+    },
+    {
+      "action": "click",
+      "selector": "//input[@type='checkbox'][1]",
+      "xpath": "True"
+    }
+  ],
+  "timestamp": 1695235445064
+}

@@ -1,0 +1,20 @@
+{
+  "name": "add_remove_elements",
+  "tasks": [
+    {
+      "action": "visit",
+      "url": "https://the-internet.herokuapp.com/add_remove_elements/"
+    },
+    {
+      "action": "click",
+      "selector": "//button[text()='Add Element']",
+      "xpath": "True"
+    },
+    {
+      "action": "click",
+      "selector": "//button[text()='Delete']",
+      "xpath": "True"
+    }
+  ],
+  "timestamp": 1695408306590
+}

@@ -1,0 +1,14 @@
+{
+  "name": "drag_and_drop",
+  "tasks": [
+    {
+      "action": "visit",
+      "url": "https://the-internet.herokuapp.com/drag_and_drop"
+    },
+    {
+      "action": "evaluate",
+      "expression": "(() => { const columnA = document.querySelector('#column-a'); const columnB = document.querySelector('#column-b'); const dataTransfer = new DataTransfer(); columnA.dispatchEvent(new DragEvent('dragstart', { dataTransfer: dataTransfer })); columnB.dispatchEvent(new DragEvent('drop', { dataTransfer: dataTransfer })); return 'Drag and Drop simulated with DataTransfer'; })()"
+    }
+  ],
+  "timestamp": 1695407675816
+}
