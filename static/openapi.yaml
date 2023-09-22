@@ -26,12 +26,18 @@ paths:
   /mouse:
     post:
       operationId: mouse
-      summary: Handle mouse.
+      summary: >
+        Handle mouse.
+        Example request body:
+        { "move": { "x": 100, "y": 100, "options": { "steps": 10 } } }
+        Another example:
+        { "dragAndDrop": { "source": { "x": 100, "y": 100 }, "target": { "x": 200, "y": 200 } } }
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              required: true
               properties:
                 move:
                   type: object
@@ -104,48 +110,56 @@ paths:
                     deltaY:
                       type: number
                       required: true
-                # drag:
-                #   type: object
-                #   properties:
-                #     start:
-                #       type: object
-                #       properties:
-                #         x:
-                #           type: number
-                #           required: true
-                #         y:
-                #           type: number
-                #           required: true
-                #     target:
-                #       type: object
-                #       properties:
-                #         x:
-                #           type: number
-                #           required: true
-                #         y:
-                #           type: number
-                #           required: true
-                # dragAndDrop:
-                #   type: object
-                #   properties:
-                #     source:
-                #       type: object
-                #       properties:
-                #         x:
-                #           type: number
-                #           required: true
-                #         y:
-                #           type: number
-                #           required: true
-                #     target:
-                #       type: object
-                #       properties:
-                #         x:
-                #           type: number
-                #           required: true
-                #         y:
-                #           type: number
-                #           required: true
+                drag:
+                  type: object
+                  description: >
+                    The drag event is sent to an element when the mouse pointer is moved while over the element during a drag operation. Any HTML element can receive this event.
+                  properties:
+                    start:
+                      type: object
+                      properties:
+                        x:
+                          type: number
+                          required: true
+                        y:
+                          type: number
+                          required: true
+                    target:
+                      type: object
+                      properties:
+                        x:
+                          type: number
+                          required: true
+                        y:
+                          type: number
+                          required: true
+                dragAndDrop:
+                  type: object
+                  description: >
+                    The drag and drop event is sent to an element when the mouse pointer is moved while over the element during a drag operation. Any HTML element can receive this event.
+                  properties:
+                    source:
+                      type: object
+                      properties:
+                        x:
+                          type: number
+                          description: Use 1 decimal places for more accuracy.
+                          required: true
+                        y:
+                          type: number
+                          description: Use 1 decimal places for more accuracy.
+                          required: true
+                    target:
+                      type: object
+                      properties:
+                        x:
+                          type: number
+                          description: Use 1 decimal places for more accuracy.
+                          required: true
+                        y:
+                          type: number
+                          description: Use 1 decimal places for more accuracy.
+                          required: true
       responses:
         "200":
           description: OK
