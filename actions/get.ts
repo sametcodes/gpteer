@@ -22,6 +22,12 @@ export const hover = {
     controller: controller.hover
 }
 
+export const select = {
+    method: "get",
+    action: "select",
+    path: "/select",
+    controller: controller.select
+}
 
 export const observe = {
     method: "get",
@@ -69,6 +75,7 @@ export default [
     visit,
     click,
     hover,
+    select,
     observe,
     router,
     type,

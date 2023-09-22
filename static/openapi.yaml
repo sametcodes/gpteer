@@ -213,6 +213,27 @@ paths:
           description: OK
         "404":
           description: Not found
+  /select:
+    get:
+      operationId: select
+      summary: Select an option of a dropdown.
+      parameters:
+        - in: query
+          name: selector
+          schema:
+            type: string
+          required: true
+          description: The selector to select
+        - in: query
+          name: option
+          schema:
+            type: string
+          description: The value option to select from the dropdown
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
   /observe:
     get:
       operationId: observe

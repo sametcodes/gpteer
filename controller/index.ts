@@ -177,6 +177,40 @@ export const hover = async (req: Request, res: Response) => {
     }
 }
 
+type SelectRequestQuery = { action: "select", selector: string, option: string }
+export const select = async (req: Request, res: Response) => {
+    try {
+        const page = await getPage();
+        const { selector, option } = req.query as unknown as SelectRequestQuery;
+
+        if (!selector) {
+            res.status(400).send('Missing selector parameter');
+            return;
+        }
+
+        const element = await page.$(selector);
+        if (!element) return res.status(400).send('Element not found');
+
+        const isIntersecting = await element.isIntersectingViewport();
+        if (!isIntersecting) await element.scrollIntoView();
+
+        await page.select(selector, option);
+
+        return res.status(200).json({
+            success: true,
+            message: "Dropdown option selected"
+        });
+    } catch (err) {
+        if (err instanceof Error) {
+            return res.status(400).json({
+                error: true,
+                name: err.name,
+                message: err.message
+            })
+        }
+    }
+}
+
 type TypeRequestQuery = { action: "type", selector: string, text: string, xpath?: "true" | "false", pressEnter?: string }
 export const type = async (req: Request, res: Response) => {
     try {
