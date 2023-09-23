@@ -15,9 +15,135 @@ paths:
           name: url
           schema:
             type: string
-            enum: [back, forward, reload]
           required: true
           description: The url of the website to visit.
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+  /mouse:
+    post:
+      operationId: mouse
+      summary: >
+        Handle mouse.
+        Example request body:
+        { "move": { "x": 100, "y": 100, "options": { "steps": 10 } } }
+        Another example:
+        { "dragAndDrop": { "source": { "x": 100, "y": 100 }, "target": { "x": 200, "y": 200 } } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                move:
+                  type: object
+                  description: >
+                    The mousemove event is sent to an element when the mouse pointer moves inside the element. Use wheel for scrolling.
+                  properties:
+                    x:
+                      type: number
+                    y:
+                      type: number
+                    options:
+                      type: object
+                      properties:
+                        steps:
+                          type: number
+                down:
+                  type: object
+                  description: >
+                    The mousedown event is sent to an element when the mouse pointer is over the element, and the mouse button is pressed. Any HTML element can receive this event.
+                  properties:
+                    options:
+                      type: object
+                      properties:
+                        button:
+                          type: string
+                          enum: [back, forward, left, right, middle]
+                        clickCount:
+                          type: number
+                up:
+                  type: object
+                  description: >
+                    The mouseup event is sent to an element when the mouse pointer is over the element, and the mouse button is released. Any HTML element can receive this event.
+                  properties:
+                    options:
+                      type: object
+                      properties:
+                        button:
+                          type: string
+                          enum: [back, forward, left, right, middle]
+                        clickCount:
+                          type: number
+                click:
+                  type: object
+                  description: >
+                    The click event is sent to an element when the mouse pointer is over the element, and the mouse button is pressed and released. Any HTML element can receive this event.
+                  properties:
+                    x:
+                      type: number
+                    y:
+                      type: number
+                    options:
+                      type: object
+                      properties:
+                        delay:
+                          type: number
+                        count:
+                          type: number
+                wheel:
+                  type: object
+                  description: >
+                    The wheel event is sent to an element when the mouse wheel is rolled up or down over the element. This can be used for scrolling.
+                  properties:
+                    deltaX:
+                      type: number
+                    deltaY:
+                      type: number
+                drag:
+                  type: object
+                  description: >
+                    The drag event is sent to an element when the mouse pointer is moved while over the element during a drag operation. Any HTML element can receive this event.
+                  properties:
+                    start:
+                      type: object
+                      properties:
+                        x:
+                          type: number
+                        y:
+                          type: number
+                    target:
+                      type: object
+                      properties:
+                        x:
+                          type: number
+                        y:
+                          type: number
+                dragAndDrop:
+                  type: object
+                  description: >
+                    The drag and drop event is sent to an element when the mouse pointer is moved while over the element during a drag operation. Any HTML element can receive this event.
+                  properties:
+                    source:
+                      type: object
+                      properties:
+                        x:
+                          type: number
+                          description: Use 1 decimal places for more accuracy.
+                        y:
+                          type: number
+                          description: Use 1 decimal places for more accuracy.
+                    target:
+                      type: object
+                      properties:
+                        x:
+                          type: number
+                          description: Use 1 decimal places for more accuracy.
+                        y:
+                          type: number
+                          description: Use 1 decimal places for more accuracy.
       responses:
         "200":
           description: OK
@@ -37,7 +163,8 @@ paths:
         - in: query
           name: xpath
           schema:
-            type: boolean
+            type: string
+            enum: [true, false]
           default: true
           required: true
           description: Whether the selector is a xpath selector or not. Default is true.
@@ -46,17 +173,68 @@ paths:
           description: OK
         "404":
           description: Not found
+  /hover:
+    get:
+      operationId: hover
+      summary: Hover on a node.
+      parameters:
+        - in: query
+          name: selector
+          schema:
+            type: string
+          required: true
+          description: The selector to hover on
+        - in: query
+          name: xpath
+          schema:
+            type: string
+            enum: [true, false]
+          default: true
+          required: true
+          description: Whether the selector is a xpath selector or not. Default is true.
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+  /select:
+    get:
+      operationId: select
+      summary: Select an option of a dropdown.
+      parameters:
+        - in: query
+          name: selector
+          schema:
+            type: string
+          required: true
+          description: The selector to select
+        - in: query
+          name: option
+          schema:
+            type: string
+          description: The value option to select from the dropdown
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
   /observe:
     get:
       operationId: observe
-      summary: Observe page body with XPath selector
+      summary: Observe page body with XPath selector. Returns if the selector is existing, clickable, or visible.
       parameters:
         - in: query
           name: xpath
           schema:
-            type: boolean
+            type: string
+            enum: [true, false]
           default: true
           description: Whether the selector is a xpath selector or not. Default is true.
+        - in: query
+          name: selector
+          schema:
+            type: string
+          required: true
       responses:
         "200":
           description: OK
@@ -82,7 +260,8 @@ paths:
         - in: query
           name: xpath
           schema:
-            type: boolean
+            type: string
+            enum: [true, false]
           default: true
           required: true
           description: Whether the selector is a xpath selector or not. Default is true.
@@ -115,6 +294,28 @@ paths:
           description: OK
         "404":
           description: Not found
+  /evaluate:
+    post:
+      operationId: evaluate
+      summary: Consider this is the console of the browser.
+      requestBody:
+        description: The JavaScript expression/code.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: The JavaScript expression to evaluate.
+              required:
+                - code
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
   /wait:
     get:
       operationId: wait
@@ -123,7 +324,7 @@ paths:
         - in: query
           name: time
           schema:
-            type: integer
+            type: number
           required: true
           description: Time to wait in seconds
       responses:
@@ -144,20 +345,12 @@ paths:
     post:
       operationId: savetask
       summary: >
-        Saves the latest task to a file as JSON.
-
-        Here is an example request body for the task format:
+        Saves the latest task to a file as JSON. Only use this if user says "save task" in the prompt.
         {
           "name": "visit_google",
           "tasks": [
-            {
-              "action": "visit",
-              "url": "https://www.google.com"
-            },
-            {
-              "action": "click",
-              "selector": "input[name='btnK']"
-            }
+            { "action": "visit", "url": "https://www.google.com" },
+            { "action": "click", "selector": "input[name='btnK']" }
           ]
         }
       requestBody:
@@ -175,13 +368,6 @@ paths:
                     type: object
                     properties:
                       action:
-                        type: string
-                      url:
-                        type: string
-                        format: uri
-                      selector:
-                        type: string
-                      text:
                         type: string
                   description: The task to save.
       responses:

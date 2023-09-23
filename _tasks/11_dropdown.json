@@ -1,0 +1,19 @@
+{
+  "name": "dropdown",
+  "tasks": [
+    {
+      "action": "visit",
+      "url": "https://the-internet.herokuapp.com/dropdown"
+    },
+    {
+      "action": "click",
+      "selector": "#dropdown",
+      "xpath": "False"
+    },
+    {
+      "action": "evaluate",
+      "expression": "document.querySelector('#dropdown').value = '1';"
+    }
+  ],
+  "timestamp": 1695409162823
+}
