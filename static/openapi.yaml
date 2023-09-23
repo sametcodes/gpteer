@@ -15,7 +15,6 @@ paths:
           name: url
           schema:
             type: string
-            enum: [back, forward, reload]
           required: true
           description: The url of the website to visit.
       responses:
@@ -37,7 +36,6 @@ paths:
           application/json:
             schema:
               type: object
-              required: true
               properties:
                 move:
                   type: object
@@ -46,10 +44,8 @@ paths:
                   properties:
                     x:
                       type: number
-                      required: true
                     y:
                       type: number
-                      required: true
                     options:
                       type: object
                       properties:
@@ -66,7 +62,6 @@ paths:
                         button:
                           type: string
                           enum: [back, forward, left, right, middle]
-                          required: true
                         clickCount:
                           type: number
                 up:
@@ -80,7 +75,6 @@ paths:
                         button:
                           type: string
                           enum: [back, forward, left, right, middle]
-                          required: true
                         clickCount:
                           type: number
                 click:
@@ -106,10 +100,8 @@ paths:
                   properties:
                     deltaX:
                       type: number
-                      required: true
                     deltaY:
                       type: number
-                      required: true
                 drag:
                   type: object
                   description: >
@@ -120,19 +112,15 @@ paths:
                       properties:
                         x:
                           type: number
-                          required: true
                         y:
                           type: number
-                          required: true
                     target:
                       type: object
                       properties:
                         x:
                           type: number
-                          required: true
                         y:
                           type: number
-                          required: true
                 dragAndDrop:
                   type: object
                   description: >
@@ -144,22 +132,18 @@ paths:
                         x:
                           type: number
                           description: Use 1 decimal places for more accuracy.
-                          required: true
                         y:
                           type: number
                           description: Use 1 decimal places for more accuracy.
-                          required: true
                     target:
                       type: object
                       properties:
                         x:
                           type: number
                           description: Use 1 decimal places for more accuracy.
-                          required: true
                         y:
                           type: number
                           description: Use 1 decimal places for more accuracy.
-                          required: true
       responses:
         "200":
           description: OK
@@ -311,18 +295,22 @@ paths:
         "404":
           description: Not found
   /evaluate:
-    get:
+    post:
       operationId: evaluate
-      summary: >
-        Evaluate a JavaScript expression on the page.
-        Example: (() => { return JSON.stringify({ text: document.querySelector('h1').textContent }) })()
-      parameters:
-        - in: query
-          name: expression
-          schema:
-            type: string
-          required: true
-          description: The JavaScript expression to evaluate.
+      summary: Consider this is the console of the browser.
+      requestBody:
+        description: The JavaScript expression/code.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: The JavaScript expression to evaluate.
+              required:
+                - code
       responses:
         "200":
           description: OK

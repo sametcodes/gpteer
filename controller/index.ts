@@ -336,19 +336,18 @@ export const router = async (req: Request, res: Response) => {
     }
 }
 
-type EvaluateRequestQuery = { action: "evaluate", expression: string }
+type EvaluateRequestQuery = { action: "evaluate", code: string }
 export const evaluate = async (req: Request, res: Response) => {
     try {
-        const { expression } = req.query as unknown as EvaluateRequestQuery;
+        const { code } = req.body as EvaluateRequestQuery;
         const page = await getPage();
 
-        if (!expression) {
+        if (!code) {
             res.status(400).send('Missing expression parameter');
             return;
         }
 
-        const evaluateResponse = await page.evaluate(expression);
-
+        const evaluateResponse = await page.evaluate(code);
         if (!evaluateResponse) return res.status(400).json({
             success: false,
             message: "Expression failed",

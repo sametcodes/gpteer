@@ -4,10 +4,8 @@ import actions from './actions';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
 const app = express();
 app.use(morgan('combined'));
-app.use(express.json());
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', 'https://chat.openai.com');
@@ -18,7 +16,7 @@ app.use((req, res, next) => {
 });
 
 actions.get.forEach((action) => app.get(action.path, action.controller))
-actions.post.forEach((action) => app.post(action.path, action.controller))
+actions.post.forEach((action) => app.post(action.path, ...(action.middlewares || []), action.controller))
 
 app.use(express.static('static'));
 

@@ -7,7 +7,6 @@ export const visit = {
     controller: controller.visit
 }
 
-
 export const click = {
     method: "get",
     action: "click",
@@ -50,13 +49,6 @@ export const type = {
     controller: controller.type
 }
 
-export const evaluate = {
-    method: "get",
-    action: "evaluate",
-    path: "/evaluate",
-    controller: controller.evaluate
-}
-
 export const wait = {
     method: "get",
     action: "wait",
@@ -80,6 +72,5 @@ export default [
     router,
     type,
     wait,
-    evaluate,
     exit
 ]
